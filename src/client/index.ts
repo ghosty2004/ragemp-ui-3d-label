@@ -2,7 +2,8 @@ interface IUI3DTextLabel {
 	identifier: string;
 	_active: boolean;
 	active: boolean;
-	text: string;
+	htmlContent: string;
+	lastHtmlContentInBrowser: string;
 	position: Vector3;
 	options: {
 		dimension: number;
@@ -24,11 +25,29 @@ const disableLabel = (label: IUI3DTextLabel) => {
 
 const enableLabel = (label: IUI3DTextLabel) => {
 	label.active = true;
-	browser.call('UI3DTextLabel:add', { identifier: label.identifier, text: label.text, position: label.position });
+	browser.call('UI3DTextLabel:add', { identifier: label.identifier, htmlContent: label.htmlContent, position: label.position });
 };
 
 const getLabelAttachedEntity = ({ options: { attachedTo } }: IUI3DTextLabel) => {
 	return (attachedTo?.handle !== 0 ? attachedTo : null) as EntityMp | null;
+};
+
+const evaluateHtmlContentVars = (label: IUI3DTextLabel) => {
+	const injectionRegex = /%\{([^}]+)\}%/g;
+
+	return label.htmlContent.replace(injectionRegex, (_match, variable) => {
+		const objects = variable.split('.');
+
+		switch (objects[0]) {
+			case 'attachedEntity':
+				const attachedEntity = getLabelAttachedEntity(label);
+				if (!attachedEntity) return '';
+				const result = attachedEntity[objects[1]];
+				return `${typeof result !== 'undefined' ? result : ''}`;
+			default:
+				return '';
+		}
+	});
 };
 
 /**
@@ -69,11 +88,11 @@ mp.events.add('UI3DTextLabel:destroy', (identifier: string) => {
 	labels.splice(index, 1);
 });
 
-mp.events.add('UI3DTextLabel:update:text', (identifier: string, text: string) => {
+mp.events.add('UI3DTextLabel:update:htmlContent', (identifier: string, htmlContent: string) => {
 	const index = labels.findIndex((label) => label.identifier === identifier);
 	if (index === -1) return;
-	labels[index].text = text;
-	updateLabelInBrowser(identifier, 'text', text);
+	labels[index].htmlContent = htmlContent;
+	updateLabelInBrowser(identifier, 'htmlContent', htmlContent);
 });
 
 mp.events.add('UI3DTextLabel:update:position', (identifier: string, position: Vector3) => {
@@ -117,13 +136,23 @@ mp.events.add('render', () => {
 	const labelsThatNeedToDisable = labels.filter((label) => {
 		const attachedEntity = getLabelAttachedEntity(label);
 		const position = attachedEntity ? attachedEntity.position : label.position;
-		return mp.game.system.vdist(player.position.x, player.position.y, player.position.z, position.x, position.y, position.z) > label.options.drawDistance && label.active;
+		const dimension = attachedEntity ? attachedEntity.dimension : label.options.dimension;
+		return (
+			(mp.game.system.vdist(player.position.x, player.position.y, player.position.z, position.x, position.y, position.z) > label.options.drawDistance ||
+				mp.players.local.dimension !== dimension) &&
+			label.active
+		);
 	});
 
 	const labelsThatNeedToEnable = labels.filter((label) => {
 		const attachedEntity = getLabelAttachedEntity(label);
 		const position = attachedEntity ? attachedEntity.position : label.position;
-		return mp.game.system.vdist(player.position.x, player.position.y, player.position.z, position.x, position.y, position.z) < label.options.drawDistance && !label.active;
+		const dimension = attachedEntity ? attachedEntity.dimension : label.options.dimension;
+		return (
+			mp.game.system.vdist(player.position.x, player.position.y, player.position.z, position.x, position.y, position.z) < label.options.drawDistance &&
+			mp.players.local.dimension === dimension &&
+			!label.active
+		);
 	});
 
 	labelsThatNeedToDisable.forEach(disableLabel);
@@ -143,6 +172,14 @@ mp.events.add('render', () => {
 			const pos2D = mp.game.graphics.world3dToScreen2d(new mp.Vector3(position.x + attachedOffset.x, position.y + attachedOffset.y, position.z + attachedOffset.z));
 			if (!pos2D) return;
 
+			// update position in the browser
 			updateLabelInBrowser(label.identifier, 'position', new mp.Vector3(pos2D.x * screenRes.x, pos2D.y * screenRes.y, 0));
+
+			// update html content in the browser
+			const evaluatedHtmlContent = evaluateHtmlContentVars(label);
+			if (label.lastHtmlContentInBrowser !== evaluatedHtmlContent) {
+				updateLabelInBrowser(label.identifier, 'htmlContent', evaluatedHtmlContent);
+				label.lastHtmlContentInBrowser = evaluatedHtmlContent;
+			}
 		});
 });
