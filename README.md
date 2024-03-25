@@ -56,7 +56,7 @@ interface TextLabelMpPool {
 
 require('./ui3d');
 
-const label = mp.label.UI3D.new("<div style='background-color: black; padding: 5px; color: white;'>Cool</div>", new mp.Vector3(0, 0, 0));
+const label = mp.labels.UI3D.new("<div style='background-color: black; padding: 5px; color: white;'>Cool</div>", new mp.Vector3(0, 0, 0));
 
 // destroys the created label
 label.destroy();
