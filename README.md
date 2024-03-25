@@ -56,12 +56,26 @@ interface TextLabelMpPool {
 
 require('./ui3d');
 
-// create a simple label
-mp.labels.UI3D.new("<font color='red' size='20px'>Hello World !</font>", new mp.Vector3(0, 0, 0));
+const label = mp.label.UI3D.new("<div style='background-color: black; padding: 5px; color: white;'>Cool</div>", new mp.Vector3(0, 0, 0));
 
-// create a label which can be attached to an entity (usefull for nametag) - we also use variable injection which is evaluated in client
-const label = mp.labels.UI3D.new("<font color='red' size='20px'>%{attachedEntity.name}% (%{attachedEntity.remoteId}%)</font>");
+// destroys the created label
+label.destroy();
 
-label.attachedTo = player; // a player var of type PlayerMp
-label.attachedOffset = new mp.Vector3(0, 0, 0.5); // this will evaluated in client: player.position(x/y/z) + label.attachedOffset(x/y/z)
+label.htmlContent = ''; // changes html content
+label.position = new mp.Vector3(0, 0, 0); // changes position
+label.dimension = 1337; // changes dimension (where the label is displayed)
+label.drawDistance = 300; // changes drawDistance (default 200)
+
+// attaches the label created to an entity (this can be a player, object, vehicle)
+label.attachedTo = mp.players.at(0); // attaches to a player with id 0
+label.attachedTo = mp.vehicles.at(0); // attaches to a vehicle with id 0
+label.attachedTo = mp.objects.at(0); // attaches to an object with id 0
+
+// attaches to a bone index
+label.attachedAtBoneIndex = 99; // attaches to the player's head
+label.attachedOffset = new mp.Vector3(0, 0, 0.3); // puts slightly above the head (if attachedAtBoneIndex is not present, it evaluates as world pos + offset)
+
+// also: provides variable injection (only when attached to an entity)
+label.attachedTo = mp.players.at(0);
+label.htmlContent = "<font color='red' size='20px'>%{attachedTo.name}% (%{attachedTo.remoteId}%)</font>"; // this is evaluated on the client side only
 ```
