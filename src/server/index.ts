@@ -8,8 +8,8 @@ declare global {
 	}
 
 	interface TextLabelMpPool {
-		UI: {
-			new: (text: string, position: Vector3, options?: TextLabelUI3DOptions) => UI3DTextLabel;
+		UI3D: {
+			new: (htmlContent: string, position: Vector3, options?: TextLabelUI3DOptions) => UI3DTextLabel;
 			destroy: (index: number) => void;
 			destroyAll: () => void;
 			at: (index: number) => UI3DTextLabel;
@@ -25,12 +25,12 @@ class UI3DTextLabel {
 	static identifierCount = 0;
 
 	private identifier: string;
-	private _text: string;
+	private _htmlContent: string;
 	private _position: Vector3;
 	private _options: TextLabelUI3DOptions;
 
-	constructor(text: string, position: Vector3, options?: TextLabelUI3DOptions) {
-		this._text = text;
+	constructor(htmlContent: string, position: Vector3, options?: TextLabelUI3DOptions) {
+		this._htmlContent = htmlContent;
 		this._position = position;
 		this._options = {
 			dimension: options?.dimension || 0,
@@ -53,13 +53,13 @@ class UI3DTextLabel {
 		UI3DTextLabel.loadForPlayer(undefined, this.identifier);
 	}
 
-	set text(text: string) {
-		this._text = text;
-		mp.players.call('UI3DTextLabel:update:text', [this.identifier, this.text]);
+	set htmlContent(htmlContent: string) {
+		this._htmlContent = htmlContent;
+		mp.players.call('UI3DTextLabel:update:htmlContent', [this.identifier, this.htmlContent]);
 	}
 
-	get text() {
-		return this._text;
+	get htmlContent() {
+		return this._htmlContent;
 	}
 
 	set position(position: Vector3) {
@@ -122,7 +122,7 @@ class UI3DTextLabel {
 	toJSON() {
 		return {
 			identifier: this.identifier,
-			text: this.text,
+			htmlContent: this.htmlContent,
 			position: this.position,
 			options: {
 				dimension: this.dimension,
@@ -165,16 +165,42 @@ class UI3DTextLabel {
 				return player.call('UI3DTextLabel:load', [UI3DTextLabel.cache.map((label) => label.toJSON())]);
 		}
 	}
+
+	static checkEntityOnDestroy(entity: EntityMp) {
+		const attachedLabelsToPlayer = UI3DTextLabel.cache.filter((label) => label.attachedTo === entity);
+		attachedLabelsToPlayer.forEach((label) => label.destroy());
+	}
 }
 
 // we add the UI pool to the TextLabelMpPool
-mp.labels.UI = {
-	new: (...propeties: any[]) => new UI3DTextLabel(...(propeties as Parameters<TextLabelMpPool['UI']['new']>)),
+mp.labels.UI3D = {
+	/**
+	 * Create a new UI3DTextLabel
+	 */
+	new: (...propeties: any[]) => new UI3DTextLabel(...(propeties as Parameters<TextLabelMpPool['UI3D']['new']>)),
+	/**
+	 * Destroy a UI3DTextLabel by index
+	 */
 	destroy: (index: number) => UI3DTextLabel.destroyByIndex(index),
+	/**
+	 * Destroy all UI3DTextLabels
+	 */
 	destroyAll: () => UI3DTextLabel.destroyAll(),
+	/**
+	 * Get a UI3DTextLabel by index
+	 */
 	at: (index: number) => UI3DTextLabel.cache[index],
+	/**
+	 * Check if a UI3DTextLabel exists by index
+	 */
 	exists: (index: number) => !!UI3DTextLabel.cache[index],
+	/**
+	 * Get all UI3DTextLabels
+	 */
 	toArray: () => UI3DTextLabel.cache,
+	/**
+	 * Get the length of the UI3DTextLabels
+	 */
 	get length() {
 		return UI3DTextLabel.length;
 	}
@@ -182,5 +208,6 @@ mp.labels.UI = {
 
 // We load all labels for specific player when he joins
 mp.events.add('playerJoin', UI3DTextLabel.loadForPlayer);
+mp.events.add('playerQuit', UI3DTextLabel.checkEntityOnDestroy);
 
 export {};
