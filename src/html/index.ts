@@ -9,7 +9,7 @@ interface IXYZ extends IXY {
 
 interface IUI3DTextLabel {
 	identifier: string;
-	text: string;
+	htmlContent: string;
 	position: IXYZ;
 	element: HTMLDivElement;
 }
@@ -17,19 +17,19 @@ interface IUI3DTextLabel {
 const labels: IUI3DTextLabel[] = [];
 
 window.mp.events.add('UI3DTextLabel:add', (payload: any) => {
-	const { identifier, text, position }: IUI3DTextLabel = JSON.parse(payload);
+	const { identifier, htmlContent, position }: IUI3DTextLabel = JSON.parse(payload);
 
 	// in case if we already have this label
 	if (labels.some((label) => label.identifier === identifier)) return;
 
 	const container = document.getElementById('container');
 	const element = document.createElement('div');
-	element.innerHTML = text;
+	element.innerHTML = htmlContent;
 	element.classList.add('label');
 	container.appendChild(element);
 
 	// add the label to the cache
-	labels.push({ identifier, text, position, element });
+	labels.push({ identifier, htmlContent, position, element });
 });
 
 window.mp.events.add('UI3DTextLabel:remove', (identifier: string) => {
@@ -53,7 +53,7 @@ window.mp.events.add('UI3DTextLabel:update', (identifier: string, option: keyof 
 			labels[index].element.style.left = `${x}px`;
 			labels[index].element.style.top = `${y}px`;
 			break;
-		case 'text':
+		case 'htmlContent':
 			labels[index].element.innerHTML = value;
 			break;
 	}
