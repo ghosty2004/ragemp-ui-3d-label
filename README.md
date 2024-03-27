@@ -77,5 +77,5 @@ label.attachedOffset = new mp.Vector3(0, 0, 0.3); // puts slightly above the hea
 
 // also: provides variable injection (only when attached to an entity)
 label.attachedTo = mp.players.at(0);
-label.htmlContent = "<font color='red' size='20px'>%{attachedTo.name}% (%{attachedTo.remoteId}%)</font>"; // this is evaluated on the client side only
+label.htmlContent = "<font color='red' size='20px'>%{attachedEntity.name}% (%{attachedEntity.remoteId}%)</font>"; // this is evaluated on the client side only
 ```
