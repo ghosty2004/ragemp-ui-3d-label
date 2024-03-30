@@ -26,7 +26,7 @@ window.mp.events.add('UI3DTextLabel:add', (payload: any) => {
 	const element = document.createElement('div');
 	element.innerHTML = htmlContent;
 	element.classList.add('label');
-	container.appendChild(element);
+	container?.appendChild(element);
 
 	// add the label to the cache
 	labels.push({ identifier, htmlContent, position, element });
@@ -41,20 +41,26 @@ window.mp.events.add('UI3DTextLabel:remove', (identifier: string) => {
 	labels.splice(index, 1);
 });
 
-window.mp.events.add('UI3DTextLabel:update', (identifier: string, option: keyof Omit<IUI3DTextLabel, 'identifier' | 'element'>, value: any) => {
-	const index = labels.findIndex((label) => label.identifier === identifier);
-	if (index === -1) return;
+window.mp.events.add('UI3DTextLabel:updateMore', <T extends keyof Omit<IUI3DTextLabel, 'identifier' | 'element'>>(payload: string) => {
+	const arrayOfLabels: { identifier: string; parts: [T, IUI3DTextLabel[T]][] }[] = JSON.parse(payload);
 
-	labels[index][option] = value;
+	arrayOfLabels
+		.map((m) => ({ ...m, index: labels.findIndex((f) => f.identifier === m.identifier) }))
+		.filter((f) => f.index !== -1)
+		.forEach(({ parts: partsToBeUpdated, index }) => {
+			partsToBeUpdated.forEach(([option, value]) => {
+				switch (true) {
+					case option === 'position' && typeof value === 'object':
+						const { x, y } = value;
+						labels[index].element.style.left = `${x}px`;
+						labels[index].element.style.top = `${y}px`;
+						break;
+					case option === 'htmlContent' && typeof value === 'string':
+						labels[index].element.innerHTML = value;
+						break;
+				}
+			});
+		});
 
-	switch (option) {
-		case 'position':
-			const { x, y } = JSON.parse(value);
-			labels[index].element.style.left = `${x}px`;
-			labels[index].element.style.top = `${y}px`;
-			break;
-		case 'htmlContent':
-			labels[index].element.innerHTML = value;
-			break;
-	}
+	console.log(`Updating ${arrayOfLabels.length} labels`);
 });

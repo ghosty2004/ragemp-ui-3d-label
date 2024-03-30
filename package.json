@@ -5,9 +5,9 @@
 	"type": "module",
 	"scripts": {
 		"cleanup": "rimraf dist",
-		"build": "npm run cleanup && rollup -c scripts/rollup.config.js && parcel build --dist-dir dist/client/html --no-source-maps src/html/index.html",
 		"deploy": "node scripts/deploy.js",
-		"dev": "nodemon --watch src/ --ext ts,html --exec \"npm run build && npm run deploy\""
+		"build": "npm run cleanup && rollup -c scripts/rollup.config.js && parcel build --dist-dir dist/client/html --no-source-maps src/html/index.html && npm run deploy",
+		"dev": "nodemon --watch src/ --ext ts,html --exec \"npm run build\""
 	},
 	"devDependencies": {
 		"@ragempcommunity/types-cef": "^2.1.6",
@@ -15,11 +15,23 @@
 		"@ragempcommunity/types-server": "^2.1.6",
 		"@rollup/plugin-typescript": "^11.1.6",
 		"@types/node": "^20.11.30",
+		"@types/react": "^18.2.73",
+		"@types/react-dom": "^18.2.23",
 		"nodemon": "^3.1.0",
 		"parcel": "^2.12.0",
 		"rimraf": "^5.0.5",
 		"rollup": "^4.13.0",
 		"tslib": "^2.6.2",
 		"typescript": "^5.4.3"
+	},
+	"dependencies": {
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0"
+	},
+	"prettier": {
+		"tabWidth": 4,
+		"printWidth": 200,
+		"singleQuote": true,
+		"useTabs": true
 	}
 }

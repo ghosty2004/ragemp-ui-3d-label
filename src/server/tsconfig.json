@@ -4,5 +4,5 @@
 		"types": ["../../node_modules/@ragempcommunity/types-server"],
 		"baseUrl": "./"
 	},
-	"include": ["./**/*.ts"]
+	"include": ["./**/*.ts", "utils/defineLabel.tsx"]
 }
