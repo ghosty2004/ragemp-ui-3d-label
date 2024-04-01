@@ -2,7 +2,6 @@ interface IUI3DTextLabel {
 	identifier: string;
 	active: boolean;
 	htmlContent: string;
-	lastHtmlContentInBrowser: string;
 	position: Vector3;
 	options: {
 		dimension: number;
@@ -13,6 +12,10 @@ interface IUI3DTextLabel {
 		} | null;
 		attachedAtBoneIndex: number | null;
 		attachedOffset: Vector3;
+	};
+	lastCacheInBrowser?: {
+		position: Vector3;
+		htmlContent: string;
 	};
 }
 
@@ -27,7 +30,7 @@ const disableLabel = (label: IUI3DTextLabel) => {
 
 const enableLabel = (label: IUI3DTextLabel) => {
 	label.active = true;
-	browser.call('UI3DTextLabel:add', { identifier: label.identifier, htmlContent: label.lastHtmlContentInBrowser, position: label.position });
+	browser.call('UI3DTextLabel:add', { identifier: label.identifier, htmlContent: label.lastCacheInBrowser?.htmlContent || '', position: label.position });
 };
 
 const updateLabelsInBrowser = <T extends keyof Omit<IUI3DTextLabel, 'identifier' | 'active' | 'options'>>(arrayOfTextLabels: { identifier: string; parts: [T, IUI3DTextLabel[T]][] }[]) => {
@@ -102,14 +105,12 @@ mp.events.add('UI3DTextLabel:update:htmlContent', (identifier: string, htmlConte
 	const index = labels.findIndex((label) => label.identifier === identifier);
 	if (index === -1) return;
 	labels[index].htmlContent = htmlContent;
-	updateLabelsInBrowser([{ identifier, parts: [['htmlContent', htmlContent]] }]);
 });
 
 mp.events.add('UI3DTextLabel:update:position', (identifier: string, position: Vector3) => {
 	const index = labels.findIndex((label) => label.identifier === identifier);
 	if (index === -1) return;
 	labels[index].position = position;
-	updateLabelsInBrowser([{ identifier, parts: [['position', position]] }]);
 });
 
 mp.events.add('UI3DTextLabel:update:dimension', (identifier: string, dimension: IUI3DTextLabel['options']['dimension']) => {
@@ -142,10 +143,16 @@ mp.events.add('UI3DTextLabel:update:attachedOffset', (identifier: string, attach
 	labels[index].options.attachedOffset = attachedOffset;
 });
 
+const addOffsetToVector = (vector: Vector3, offset: Vector3) => new mp.Vector3(vector.x + offset.x, vector.y + offset.y, vector.z + offset.z);
+
 const getLabelAttachmentInformations = (label: IUI3DTextLabel) => {
 	const attachedEntity = getLabelAttachedEntity(label);
 	const attachedAtBoneIndex = label.options.attachedAtBoneIndex;
-	const position = attachedEntity ? (attachedAtBoneIndex !== null ? attachedEntity.getWorldPositionOfBone(attachedAtBoneIndex) : attachedEntity.position) : label.position;
+	const attachedOffset = label.options.attachedOffset;
+	const position = addOffsetToVector(
+		attachedEntity ? (attachedAtBoneIndex !== null ? attachedEntity.getWorldPositionOfBone(attachedAtBoneIndex) : attachedEntity.position) : label.position,
+		attachedOffset
+	);
 	const dimension = attachedEntity ? attachedEntity.dimension : label.options.dimension;
 
 	return { position, dimension };
@@ -183,25 +190,42 @@ mp.events.add('render', () => {
 	// get the active screen resolution
 	const screenRes = mp.game.graphics.getActiveScreenResolution();
 
-	// get the labels that need to be updated
-	const labelsWhichNeedToBeUpdated = labels
-		.filter((f) => f.active)
-		.map((label) => {
-			const identifier = label.identifier;
-			const { position } = getLabelAttachmentInformations(label);
-			const pos2D = mp.game.graphics.world3dToScreen2d(position);
+	// create an array of labels that need to be updated
+	const labelsWhichNeedToBeUpdated: Array<{
+		identifier: string;
+		parts: [keyof Omit<IUI3DTextLabel, 'identifier' | 'active' | 'options'>, any][];
+	}> = [];
 
-			const labelPosition = new mp.Vector3(pos2D.x * screenRes.x, pos2D.y * screenRes.y, 0);
-			const labelHtmlContent = evaluateHtmlContentVars(label);
+	// iterate over the labels
+	for (const [index, label] of labels.entries()) {
+		if (!label.active) continue;
 
-			return {
-				identifier,
-				parts: [
-					['position', labelPosition],
-					['htmlContent', labelHtmlContent],
-				] as [keyof Omit<IUI3DTextLabel, 'identifier' | 'active' | 'options'>, any][],
-			};
+		const identifier = label.identifier;
+		const { position } = getLabelAttachmentInformations(label);
+		const pos2D = mp.game.graphics.world3dToScreen2d(position);
+
+		const labelPosition = new mp.Vector3(pos2D.x * screenRes.x, pos2D.y * screenRes.y, 0);
+		const labelHtmlContent = evaluateHtmlContentVars(label);
+
+		const lastCacheInBrowser = labels[index]?.lastCacheInBrowser;
+
+		// if the label is already in the browser, skip it
+		if (JSON.stringify(lastCacheInBrowser?.position) === JSON.stringify(labelPosition) && lastCacheInBrowser?.htmlContent === labelHtmlContent) continue;
+
+		const parts = [
+			...(JSON.stringify(lastCacheInBrowser?.position) !== JSON.stringify(labelPosition) ? [['position', labelPosition]] : []),
+			...(lastCacheInBrowser?.htmlContent !== labelHtmlContent ? [['htmlContent', labelHtmlContent]] : []),
+		] as [keyof Omit<IUI3DTextLabel, 'identifier' | 'active' | 'options'>, any][];
+
+		if (!parts.length) continue;
+
+		labelsWhichNeedToBeUpdated.push({
+			identifier,
+			parts,
 		});
+
+		labels[index].lastCacheInBrowser = { position: labelPosition, htmlContent: labelHtmlContent };
+	}
 
 	updateLabelsInBrowser(labelsWhichNeedToBeUpdated);
 });

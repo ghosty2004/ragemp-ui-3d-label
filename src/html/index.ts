@@ -14,6 +14,22 @@ interface IUI3DTextLabel {
 	element: HTMLDivElement;
 }
 
+// Get the body element (or create it if it doesn't exist)
+const body = document.querySelector('body') ?? document.appendChild(document.createElement('body'));
+
+// Set the body styles
+body.style.padding = '0';
+body.style.margin = '0';
+body.style.overflow = 'hidden';
+body.style.userSelect = 'none';
+body.style.whiteSpace = 'nowrap';
+
+// Create the container and append it to the body
+const container = document.createElement('div');
+container.style.position = 'absolute';
+body.appendChild(container);
+
+// Create the array of labels
 const labels: IUI3DTextLabel[] = [];
 
 window.mp.events.add('UI3DTextLabel:add', (payload: any) => {
@@ -22,11 +38,11 @@ window.mp.events.add('UI3DTextLabel:add', (payload: any) => {
 	// in case if we already have this label
 	if (labels.some((label) => label.identifier === identifier)) return;
 
-	const container = document.getElementById('container');
 	const element = document.createElement('div');
 	element.innerHTML = htmlContent;
-	element.classList.add('label');
-	container?.appendChild(element);
+	element.style.position = 'absolute';
+	element.style.transform = 'translate(-50%, -50%)';
+	container.appendChild(element);
 
 	// add the label to the cache
 	labels.push({ identifier, htmlContent, position, element });

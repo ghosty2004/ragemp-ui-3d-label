@@ -87,6 +87,8 @@ mp.events.addCommand('player', (player) => {
 	mp.labels.UI3D.new(PlayerLabel, player.position, {
 		drawDistance: 30,
 		attachedTo: player,
+		attachedAtBoneIndex: 99, // head
+		attachedOffset: new mp.Vector3(0, 0, 0.5), // a little bit above the head
 	});
 });
 
