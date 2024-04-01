@@ -2,11 +2,8 @@ name: Build & Deploy html
 
 on:
   push:
-    branches:
-      - dev-v2
-  # push:
-  #   paths:
-  #     - 'src/html/**'
+    paths:
+      - 'src/html/**'
   workflow_dispatch:
 
 jobs:
