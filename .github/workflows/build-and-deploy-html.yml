@@ -1,9 +1,9 @@
 name: Build & Deploy html
 
 on:
-  push:
-    paths:
-      - 'src/html/**'
+  # push:
+  #   paths:
+  #     - 'src/html/**'
   workflow_dispatch:
 
 jobs:

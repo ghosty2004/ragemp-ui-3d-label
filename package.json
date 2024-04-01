@@ -6,7 +6,7 @@
 	"scripts": {
 		"build-client": "tsc --project ./src/client/tsconfig.json",
 		"build-server": "tsc --project ./src/server/tsconfig.json",
-		"build-html": "parcel build --dist-dir dist/html --no-source-maps --public-url ./ragemp-ui-3d-label src/html/index.html",
+		"build-html": "parcel build --dist-dir dist/html --no-source-maps --public-url 'https://ghosty2004.github.io/ragemp-ui-3d-label/' src/html/index.html",
 		"build": "rimraf dist && npm run build-client && npm run build-server && npm run build-html"
 	},
 	"devDependencies": {
