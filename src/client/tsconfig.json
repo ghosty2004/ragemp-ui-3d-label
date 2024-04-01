@@ -1,7 +1,7 @@
 {
 	"extends": "../../tsconfig.json",
 	"compilerOptions": {
-		"types": ["../../node_modules/@ragempcommunity/types-client"],
+		"types": ["@ragempcommunity/types-client"],
 		"baseUrl": "./"
 	},
 	"include": ["./**/*.ts"]

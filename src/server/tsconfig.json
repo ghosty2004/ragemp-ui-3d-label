@@ -1,7 +1,7 @@
 {
 	"extends": "../../tsconfig.json",
 	"compilerOptions": {
-		"types": ["../../node_modules/@ragempcommunity/types-server"],
+		"types": ["@ragempcommunity/types-server"],
 		"baseUrl": "./"
 	},
 	"include": ["./**/*.ts", "utils/defineLabel.tsx"]
