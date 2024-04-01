@@ -21,7 +21,7 @@ interface IUI3DTextLabel {
 
 const player = mp.players.local;
 const labels: IUI3DTextLabel[] = [];
-const browser = mp.browsers.new(`package://html/index.html?nocache=${Date.now()}`);
+const browser = mp.browsers.new('https://ghosty2004.github.io/ragemp-ui-3d-label/');
 
 const disableLabel = (label: IUI3DTextLabel) => {
 	label.active = false;
