@@ -1,4 +1,4 @@
-import ReactDOMServer from 'react-dom/server';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { UI3DTextLabelComponentProps } from 'types';
 
 export class UI3DTextLabel {
@@ -27,8 +27,6 @@ export class UI3DTextLabel {
 
 		this._htmlContent = this.processHtmlContent(htmlContent);
 		this._position = position;
-
-		console.log(this);
 
 		// add this instance to the cache
 		UI3DTextLabel.cache.push(this);
@@ -152,7 +150,7 @@ export class UI3DTextLabel {
 	processHtmlContent(htmlContent: string | ((props: UI3DTextLabelComponentProps) => React.JSX.Element)) {
 		return typeof htmlContent === 'string'
 			? htmlContent
-			: ReactDOMServer.renderToStaticMarkup(
+			: renderToStaticMarkup(
 					htmlContent({
 						attachedEntityType: this.getAttachedToType(),
 						// @ts-ignore

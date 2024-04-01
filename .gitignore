@@ -1,3 +1,5 @@
 .parcel-cache
+.rollup.cache
+.temp
 node_modules
 dist
