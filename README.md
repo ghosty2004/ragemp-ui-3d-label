@@ -18,6 +18,10 @@ Remember to 🌟 this Github if you 💖 it.
 -   Move the `server` path from `dist/server` into your `packages/your-gamemode/ui3d` path
 -   Move the `client` path from `dist/client` into your `client_packages/ui3d` path
 
+## Preview
+[![video_1](https://img.youtube.com/vi/Qoc7LoYU37s/0.jpg)](https://www.youtube.com/watch?v=Qoc7LoYU37s)
+[![video_2](https://img.youtube.com/vi/U55I8b42f4w/0.jpg)](https://www.youtube.com/watch?v=U55I8b42f4w)
+
 ## The variable injection
 
 -   When we attach a label to an entity we can specify various variables such as `health`,`name`,`remoteId` or anything else which is provided by ragemp
